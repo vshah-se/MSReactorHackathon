@@ -1,2 +1,6 @@
 real_estate_db/
 user_data_db/
+.env
+.venv
+.vscode/
+__pycache__/
