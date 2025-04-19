@@ -2,34 +2,31 @@ import React, { useState } from 'react';
 import axios from 'axios';
 
 const UploadPage = () => {
-  const [file, setFile] = useState(null); // To store selected file
-  const [error, setError] = useState(''); // To store error message
-  const [success, setSuccess] = useState(''); // To store success message
+  const [file, setFile] = useState(null);
+  const [error, setError] = useState(''); 
+  const [success, setSuccess] = useState(''); 
 
-  // Handle file selection
   const handleChange = (e) => {
-    const selected = e.target.files[0]; // Get selected file
-    if (selected && selected.type === 'application/pdf') { // Ensure it's a PDF
-      setFile(selected); // Store the file in the state
-      setError(''); // Clear any existing errors
+    const selected = e.target.files[0]; 
+    if (selected && selected.type === 'application/pdf') { // Check PDF type
+      setFile(selected); 
+      setError(''); 
     } else {
-      setFile(null); // Reset file if it's not a PDF
-      setError('Please select a PDF file'); // Show error message
+      setFile(null); 
+      setError('Please select a PDF file'); 
     }
   };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
-    e.preventDefault(); // Prevent default form behavior (page reload)
+    e.preventDefault(); 
 
-    // Check if a file is selected
     if (!file) {
       setError('Please choose a file first');
-      return; // Exit if no file is selected
+      return; 
     }
 
-    const formData = new FormData(); // Create a new FormData object
-    formData.append('file', file); // Append the file to FormData with the 'file' key
+    const formData = new FormData(); 
+    formData.append('file', file); 
 
     try {
       // Send the POST request to the backend
@@ -39,7 +36,6 @@ const UploadPage = () => {
         },
       });
 
-      // On successful upload, handle the response
       setSuccess(`File uploaded successfully! Server says: ${response.data.message}`);
       setFile(null); // Reset file input
     } catch (err) {

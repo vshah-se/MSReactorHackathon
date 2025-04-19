@@ -8,7 +8,7 @@ function LandingPage() {
       <p>Have questions about your lease?
         Upload it here and we'll answer your questions!
       </p>
-      <Link to="/upload" style={styles.link}>Go to PDF Upload</Link>
+      <Link to="/upload" style={styles.link}>Upload Your Lease</Link>
     </div>
   );
 }
@@ -23,7 +23,7 @@ const styles = {
     marginTop: '20px',
     display: 'inline-block',
     padding: '10px 20px',
-    backgroundColor: '#007bff',
+    backgroundColor: '#606c38',
     color: 'white',
     borderRadius: '8px',
     textDecoration: 'none'

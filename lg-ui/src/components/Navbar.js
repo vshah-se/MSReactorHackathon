@@ -4,7 +4,7 @@ import { NavLink } from 'react-router-dom';
 const Navbar = () => {
   return (
     <nav style={styles.nav}>
-      <h1 style={styles.logo}>📄 LeaseGuard</h1>
+      <h1 style={styles.logo}>🏠LeaseGuard</h1>
       <div style={styles.links}>
         <NavLink to="/" style={styles.link} end>Home</NavLink>
         <NavLink to="/upload" style={styles.link}>Upload</NavLink>
@@ -20,8 +20,8 @@ const styles = {
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: '10px 20px',
-    backgroundColor: '#355E3B',
-    color: 'white',
+    backgroundColor: '#283618',
+    color: '#fefae0',
     fontFamily: 'sans-serif',
   },
   logo: {
@@ -32,7 +32,7 @@ const styles = {
     gap: '20px',
   },
   link: ({ isActive }) => ({
-    color: isActive ? '#ffc107' : 'white',
+    color: isActive ? '#fefae0' : '#606c38',
     textDecoration: 'none',
     fontWeight: 'bold',
   }),
