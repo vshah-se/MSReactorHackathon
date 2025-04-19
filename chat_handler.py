@@ -122,7 +122,7 @@ class ChatHandler:
         Here are the possible intents:
         - rental_laws: The query is about rental laws and regulations.
         - lease_agreements: The query is about lease agreements, contracts, and related terms.
-        - unknown: The query is not related to rental laws or lease agreements, or the intent is unclear.
+        - unknown: The query is related to rental laws and lease agreements, or the intent is unclear.
 
         Based on the information below, determine the intent of the query.
         Query:
@@ -172,7 +172,23 @@ class ChatHandler:
                 }
             }
         else:
-            return "I'm sorry, I couldn't understand the intent of your query.  Please try again."
+            law_context, lease_context = self.rag(query)
+            # # Step 5: Create a prompt for the Gemini API
+            prompt = f"""
+            You are an AI assistant. Below are two contexts related to the user's query. Use the information from these contexts to answer the question.
+
+            Context 1 (Rental Laws):
+            {law_context}
+
+            Context 2 (Lease Information):
+            {lease_context}
+
+            Question:
+            {query}
+
+            Please provide a concise and accurate response based on the provided contexts.
+            """
+            response = self.gemini.generate_content(prompt)
 
         # Step 4: Create a prompt for the Gemini API, including the function call
         prompt = f"""
