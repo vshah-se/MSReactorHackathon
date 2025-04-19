@@ -4,6 +4,8 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from google.generativeai import configure, GenerativeModel
+from google import genai
+from google.genai import types
 import os
 
 # Configuration
@@ -64,6 +66,34 @@ class RAG:
             return False
         
         return True
+    
+    def get_law_context(self, query):
+        law_vector_db = None
+        persist_directory = "./real_estate_db"
+        if os.path.exists(persist_directory):
+            print(f"Loading existing vector database from {persist_directory}...")
+            law_vector_db = Chroma(persist_directory=persist_directory, embedding_function=HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL))
+        else:
+            print("Creating new vector database for law...")
+            law_vector_db = self._create_vector_datastore(self.REAL_ESTATE_LAW_PDF, False)
+        
+        relevant_law = law_vector_db.similarity_search(query, k=3)
+
+        law_context = "\n".join([doc.page_content for doc in relevant_law])
+
+        return law_context
+
+    def get_lease_context(self, query):
+        user_data_vector_db = None
+        persist_directory = "./user_data_db"
+        if os.path.exists(persist_directory):
+            print(f"Loading existing vector database from {persist_directory}...")
+            user_data_vector_db = Chroma(persist_directory=persist_directory, embedding_function=HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL))
+        else:
+            print("No user data vector database found. Please create one first.")
+        relevant_user_data = user_data_vector_db.similarity_search(query, k=3)
+        user_data_context = "\n".join([doc.page_content for doc in relevant_user_data])
+        return user_data_context
 
     def rag(self, query):
 

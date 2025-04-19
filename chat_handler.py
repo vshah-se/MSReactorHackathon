@@ -8,6 +8,7 @@ from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from google.generativeai import configure, GenerativeModel
 import os
+import json
 
 class ChatHandler:
     """
@@ -25,11 +26,12 @@ class ChatHandler:
         # self.lease_collection = self.chroma_client.get_or_create_collection(name="lease")
 
         # Google Gemini API configuration
-        self.gemini_api_url = "https://api.gemini-model.com/v1/chat"
+        self.gemini_api_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash"
         self.gemini_api_key = os.getenv("GEMINI_API_KEY")  # Replace with your actual API key
         self.embedding_model = SentenceTransformer("all-MiniLM-L6-v2")  # Example embedding model
         configure(api_key=self.gemini_api_key)
         self.gemini = GenerativeModel("gemini-2.0-flash")
+        self.rag = RAG()
 
     def determine_intent(self, query):
         """
@@ -112,33 +114,134 @@ class ChatHandler:
 
         # Step 4: Query the selected ChromaDB collection
         # context = self.query_vector_db(collection, query_vector)
-        vectorsearch = RAG()
-        law_context, lease_context = vectorsearch.rag(query)
-        # # Step 5: Create a prompt for the Gemini API
-        # prompt = f"""
-        # You are an AI assistant. Below are two contexts related to the user's query. Use the information from these contexts to answer the question.
+         # Step 1: Create a prompt for intent determination
+        intent_prompt = f"""
+        You are an AI assistant. Your task is to determine the intent of the user's query. 
+        The query will be related to real estate, specifically rental laws or lease agreements.
 
-        # Context 1 (Rental Laws):
-        # {rental_context}
+        Here are the possible intents:
+        - rental_laws: The query is about rental laws and regulations.
+        - lease_agreements: The query is about lease agreements, contracts, and related terms.
+        - unknown: The query is not related to rental laws or lease agreements, or the intent is unclear.
 
-        # Context 2 (Lease Information):
-        # {lease_context}
+        Based on the information below, determine the intent of the query.
+        Query:
+        {query}
 
-        # Question:
-        # {query}
+        Return the intent as one of the following strings: "rental_laws", "lease_agreements", or "unknown".
+        """
 
-        # Please provide a concise and accurate response based on the provided contexts.
-        # """
+        # Step 2: Get the intent from the Gemini API
+        try:
+            intent_response = self.gemini.generate_content(intent_prompt)
+            intent = intent_response.text.strip()
+            print(f"Intent detected: {intent}")  # Debugging
+        except Exception as e:
+            print(f"Error determining intent: {e}")
+            intent = "unknown"  # Default to unknown in case of error
 
-        # # Step 6: Send the prompt to the Google Gemini API
-        # gemini_response = self.send_to_gemini(prompt)
+        # Step 3: Define the function call based on the intent
+        if intent == "rental_laws":
+            function_call = {
+                "name": "get_rental_law_information",
+                "description": "This function retrieves information about rental laws based on the user's query.",
+                "parameters": {
+                    "type": "OBJECT",
+                    "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": "The user's query about rental laws."
+                         }
+                    },
+                    "required": ["query"]
+                }
+            }
+        elif intent == "lease_agreements":
+            function_call = {
+                "name": "get_lease_agreement_information",
+                 "description": "This function retrieves information about lease agreements based on the user's query.",
+                "parameters": {
+                    "type": "OBJECT",
+                    "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": "The user's query about lease agreements."
+                         }
+                    },
+                    "required": ["query"]
+                }
+            }
+        else:
+            return "I'm sorry, I couldn't understand the intent of your query.  Please try again."
 
-        response = self.gemini.generate_content(
-            f"Answer based on real estate laws:\nLaws Context: {law_context}\nAgreement Context: {lease_context}\nQuestion: {query}"
-        )
+        # Step 4: Create a prompt for the Gemini API, including the function call
+        prompt = f"""
+        You are an AI assistant. The user has a question about real estate. You have access to the following function:
 
-        # Step 7: Return the response
+        {json.dumps(function_call, indent=4)}
+
+        Use this function to answer the user's question: {query}
+        """
+
+        # Step 5: Send the prompt and function call to the Gemini API
+        try:
+            response = self.gemini.generate_content(
+                contents=prompt,
+                tools=[{"function_declarations": [function_call]}]
+            )
+
+            # Check if the response contains a function call
+            if response.parts and response.parts[0].function_call:
+                function_name = response.parts[0].function_call.name
+                arguments = response.parts[0].function_call.args
+
+                # Call the function based on the function name
+                if function_name == "get_rental_law_information":
+                    return self.get_rental_law_information(arguments)  # Call the function
+                elif function_name == "get_lease_agreement_information":
+                    return self.get_lease_agreement_information(arguments)
+                else:
+                    return f"Unknown function: {function_name}"
+            else:
+                return response.text  # Return the response text if no function call
+        except Exception as e:
+            return f"Error communicating with Gemini API: {e}"
+
+    def get_rental_law_information(self, arguments):
+        """
+        This function is called when the Gemini API determines that the get_rental_law_information
+        function should be called.
+        """
+        query = arguments.get("query")
+        context = self.rag.get_law_context(query)
+
+        prompt = f"""
+        You are an AI assistant. Your task is to answer questions about user query based on the context provided.
+        Based on the information below use context to answer the user's question.
+        Query:{query}
+        context:{context}
+        """
+        response = self.gemini.generate_content(prompt)
         return response.text
+
+    def get_lease_agreement_information(self, arguments):
+        """
+        This function is called when the Gemini API determines that the get_lease_agreement_information
+        function should be called.
+        """
+        
+        query = arguments.get("query")
+        context = self.rag.get_lease_context(query)
+
+        prompt = f"""
+        You are an AI assistant. Your task is to answer questions about user query based on the context provided.
+        Based on the information below use context to answer the user's question.
+        Query:{query}
+        context:{context}
+        """
+        response = self.gemini.generate_content(prompt)
+        return response.text
+
     
 # Example usage
 if __name__ == "__main__":
