@@ -6,6 +6,7 @@ from sentence_transformers import SentenceTransformer
 from langchain_community.vectorstores import Chroma
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+from google.generativeai import configure, GenerativeModel
 import os
 
 class ChatHandler:
@@ -27,6 +28,8 @@ class ChatHandler:
         self.gemini_api_url = "https://api.gemini-model.com/v1/chat"
         self.gemini_api_key = os.getenv("GEMINI_API_KEY")  # Replace with your actual API key
         self.embedding_model = SentenceTransformer("all-MiniLM-L6-v2")  # Example embedding model
+        configure(api_key=self.gemini_api_key)
+        self.gemini = GenerativeModel("gemini-2.0-flash")
 
     def determine_intent(self, query):
         """
@@ -110,28 +113,32 @@ class ChatHandler:
         # Step 4: Query the selected ChromaDB collection
         # context = self.query_vector_db(collection, query_vector)
         vectorsearch = RAG()
-        rental_context, lease_context = vectorsearch.rag(query)
-        # Step 5: Create a prompt for the Gemini API
-        prompt = f"""
-        You are an AI assistant. Below are two contexts related to the user's query. Use the information from these contexts to answer the question.
+        law_context, lease_context = vectorsearch.rag(query)
+        # # Step 5: Create a prompt for the Gemini API
+        # prompt = f"""
+        # You are an AI assistant. Below are two contexts related to the user's query. Use the information from these contexts to answer the question.
 
-        Context 1 (Rental Laws):
-        {rental_context}
+        # Context 1 (Rental Laws):
+        # {rental_context}
 
-        Context 2 (Lease Information):
-        {lease_context}
+        # Context 2 (Lease Information):
+        # {lease_context}
 
-        Question:
-        {query}
+        # Question:
+        # {query}
 
-        Please provide a concise and accurate response based on the provided contexts.
-        """
+        # Please provide a concise and accurate response based on the provided contexts.
+        # """
 
-        # Step 6: Send the prompt to the Google Gemini API
-        gemini_response = self.send_to_gemini(prompt)
+        # # Step 6: Send the prompt to the Google Gemini API
+        # gemini_response = self.send_to_gemini(prompt)
+
+        response = self.gemini.generate_content(
+            f"Answer based on real estate laws:\nLaws Context: {law_context}\nAgreement Context: {lease_context}\nQuestion: {query}"
+        )
 
         # Step 7: Return the response
-        return gemini_response
+        return response.text
     
 # Example usage
 if __name__ == "__main__":

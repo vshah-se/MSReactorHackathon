@@ -1,5 +1,7 @@
 real_estate_db/
+real_estate_db_old/
 user_data_db/
+user_data_db_old/
 .env
 .venv
 .vscode/
