@@ -4,7 +4,7 @@ import { NavLink } from 'react-router-dom';
 const Navbar = () => {
   return (
     <nav style={styles.nav}>
-      <h1 style={styles.logo}>📄 MyApp</h1>
+      <h1 style={styles.logo}>📄 LeaseGuard</h1>
       <div style={styles.links}>
         <NavLink to="/" style={styles.link} end>Home</NavLink>
         <NavLink to="/upload" style={styles.link}>Upload</NavLink>
@@ -20,7 +20,7 @@ const styles = {
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: '10px 20px',
-    backgroundColor: '#007bff',
+    backgroundColor: '#355E3B',
     color: 'white',
     fontFamily: 'sans-serif',
   },

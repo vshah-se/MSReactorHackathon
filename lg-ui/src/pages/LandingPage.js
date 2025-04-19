@@ -4,8 +4,10 @@ import { Link } from 'react-router-dom';
 function LandingPage() {
   return (
     <div style={styles.container}>
-      <h1>Welcome to My App</h1>
-      <p>This is the landing page.</p>
+      <h1>LeaseGuard</h1>
+      <p>Have questions about your lease?
+        Upload it here and we'll answer your questions!
+      </p>
       <Link to="/upload" style={styles.link}>Go to PDF Upload</Link>
     </div>
   );
