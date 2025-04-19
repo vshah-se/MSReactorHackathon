@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import axios from 'axios';
 import './ChatPage.css';
 
 const ChatPage = () => {
@@ -14,27 +15,33 @@ const ChatPage = () => {
 
   useEffect(scrollToBottom, [messages]);
 
-  const handleSend = (e) => {
+  const handleSend = async (e) => {
     e.preventDefault();
     if (!input.trim()) return;
-
-    const userMsg = { text: input.trim(), sender: 'user' };
-    setMessages((prev) => [...prev, userMsg]);
+  
+    const userQuery = input.trim();
+  
+    // Show user's message
+    setMessages(prev => [...prev, { text: userQuery, sender: 'user' }]);
     setInput('');
-
-    // Fake bot response
-    setTimeout(() => {
-      const botReply = generateBotResponse(input.trim());
-      setMessages((prev) => [...prev, { text: botReply, sender: 'bot' }]);
-    }, 500);
+  
+    try {
+      // Send query and get bot response directly
+      const res = await axios.post('http://localhost:5000/chat', JSON.stringify({ query: userQuery }), {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+  
+      const botText = res.data?.response || "Sorry, I didn’t get that 🤖";
+  
+      setMessages(prev => [...prev, { text: botText, sender: 'bot' }]);
+    } catch (err) {
+      console.error('Error communicating with backend:', err);
+      setMessages(prev => [...prev, { text: "⚠️ Could not reach the server.", sender: 'bot' }]);
+    }
   };
-
-  const generateBotResponse = (msg) => {
-    // Replace this with API call to a real chatbot
-    if (msg.toLowerCase().includes("hello")) return "Hey there!";
-    if (msg.toLowerCase().includes("how are you")) return "I'm just code, but I'm doing great!";
-    return "Sorry, I don't understand that yet 🤖";
-  };
+  
 
   return (
     <div className="chat-container">
