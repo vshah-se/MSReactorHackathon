@@ -78,7 +78,8 @@ if __name__ == "__main__":
     rag = RAG()
     rag.create_user_data_vector_store("rental_agreement.pdf")
     # Example query
-    print(rag.rag(input("Enter your query: ")))
+    query = input("Enter your query: ")
+    law_context, user_data_context = rag.rag(query)
     configure(api_key=GEMINI_API_KEY)
     gemini = GenerativeModel("gemini-2.0-flash")
 
