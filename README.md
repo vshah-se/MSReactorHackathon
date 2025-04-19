@@ -13,3 +13,5 @@ A day hackathon with Microsoft Reactor
 
 #Docker Command for API
 docker run -p 5000:5000 -v "$(pwd)/uploads:/app/uploads" msreactor-hackathon
+
+Pitch Deck: https://docs.google.com/presentation/d/1vvhr-DWDPBZXmltkvfGJSR2TcCl2Iktirf3iQQQ-E_Y/edit?usp=sharing
