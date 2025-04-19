@@ -36,7 +36,7 @@
 | Task                                                                        | Story Points | Skills Required                    | Dependencies     |
 | :-------------------------------------------------------------------------- | :----------- | :--------------------------------- | :--------------- |
 | 14. Set up Python-based document processing service (AI analysis).        | 5            | Python, Backend Architecture       | 1                |
-| 15. Integrate a pre-trained LLM (Hugging Face) for text analysis.          | 8            | Python, NLP, Machine Learning      | 14               |
+| 15. Integrate a pre-trained LLM (Gemini Pro 2.5 Max Exp) for text analysis.          | 8            | Python, NLP, Machine Learning      | 14               |
 | 16. Develop logic to identify key sections in a lease.                     | 8            | Python, NLP, Document Parsing      | 15               |
 | 17. Create a database of common "red flag" lease clauses/rules.            | 5            | Data Analysis, Legal Knowledge     | 6                |
 | 18. Implement logic to compare extracted terms against red flag database.   | 8            | Python, Rule-Based Systems         | 15, 16, 17       |
