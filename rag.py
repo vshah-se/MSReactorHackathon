@@ -15,15 +15,20 @@ CHUNK_OVERLAP = 200
 class RAG:
 
     REAL_ESTATE_LAW_PDF = "RCW_59.18.pdf"
-    LAW_VECTOR_DB = None
-    USER_DATA_VECTOR_DB = None
 
     def __init__(self):
         print("Initializing RAG...")
-        self.LAW_VECTOR_DB = self._create_vector_datastore(self.REAL_ESTATE_LAW_PDF, False)
-        print("Data store created, RAG initialized successfully.")
+        self._create_vector_datastore(self.REAL_ESTATE_LAW_PDF, False)
+        print("RAG initialized successfully.")
 
     def _create_vector_datastore(self, pdf_path, create_user_data):
+
+        # Check if the Law vector database already exists, 
+        persist_directory = "./real_estate_db"
+        if os.path.exists(persist_directory) and not create_user_data:
+            print(f"Vector DB at {persist_directory} already exists.")
+            return Chroma(persist_directory=persist_directory, embedding_function=HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL))
+        
         # Load PDF
         loader = PyPDFLoader(pdf_path)
         documents = loader.load()
@@ -48,7 +53,7 @@ class RAG:
     def create_user_data_vector_store(self, user_data):
         try:
             print(f"Creating user data vector store from {user_data}...")
-            self.USER_DATA_VECTOR_DB = self._create_vector_datastore(user_data, True)
+            self._create_vector_datastore(user_data, True)
             print("User data vector store created successfully.")
         except Exception as e:
             print(f"Error creating user data vector store: {e}")
@@ -58,15 +63,25 @@ class RAG:
 
     def rag(self, query):
 
-        if not self.LAW_VECTOR_DB:
-            print("Error: Law vector database not initialized.")
-            return None
-        if not self.USER_DATA_VECTOR_DB:
-            print("Error: User data vector database not initialized.")
-            return None
+        law_vector_db = None
+        persist_directory = "./real_estate_db"
+        if os.path.exists(persist_directory):
+            print(f"Loading existing vector database from {persist_directory}...")
+            law_vector_db = Chroma(persist_directory=persist_directory, embedding_function=HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL))
+        else:
+            print("Creating new vector database for law...")
+            law_vector_db = self._create_vector_datastore(self.REAL_ESTATE_LAW_PDF, False)
+
+        user_data_vector_db = None
+        persist_directory = "./user_data_db"
+        if os.path.exists(persist_directory):
+            print(f"Loading existing vector database from {persist_directory}...")
+            user_data_vector_db = Chroma(persist_directory=persist_directory, embedding_function=HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL))
+        else:
+            print("No user data vector database found. Please create one first.")
         
-        relevant_law = self.LAW_VECTOR_DB.similarity_search(query, k=3)
-        relevant_user_data = self.USER_DATA_VECTOR_DB.similarity_search(query, k=3)
+        relevant_law = law_vector_db.similarity_search(query, k=3)
+        relevant_user_data = user_data_vector_db.similarity_search(query, k=3)
 
         law_context = "\n".join([doc.page_content for doc in relevant_law])
         user_data_context = "\n".join([doc.page_content for doc in relevant_user_data])
@@ -76,7 +91,7 @@ class RAG:
 if __name__ == "__main__":
     # Example usage
     rag = RAG()
-    rag.create_user_data_vector_store("rental_agreement.pdf")
+    # rag.create_user_data_vector_store("rental_agreement.pdf")
     # Example query
     query = input("Enter your query: ")
     law_context, user_data_context = rag.rag(query)
