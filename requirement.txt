@@ -1,0 +1,8 @@
+transformers
+faiss-cpu
+langchain
+sentence-transformers
+flask
+flask-cors
+numpy
+chromadb
