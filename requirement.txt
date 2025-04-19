@@ -7,3 +7,6 @@ sentence-transformers
 google-generativeai
 gunicorn
 PyPDF2
+transformers
+ faiss-cpu
+ numpy
