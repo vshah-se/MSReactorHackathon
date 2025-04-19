@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import os
+from chat_handler import ChatHandler
 
 app = Flask(__name__)
 CORS(app)
@@ -38,8 +39,9 @@ def chat():
         return jsonify({'error': 'No query provided'}), 400
 
     query = data['query']
+    chat_handler = ChatHandler()
+    response = chat_handler.process_query(query)
     # Mock response for now
-    response = f"Received your query: {query}. This is a mock response."
     return jsonify({'query': query, 'response': response}), 200
 
 if __name__ == '__main__':
