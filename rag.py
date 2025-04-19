@@ -14,14 +14,14 @@ CHUNK_OVERLAP = 200
 
 class RAG:
 
-    REAL_ESTATE_LAW_PDF = "RCW_59.18.pdf"
+    REAL_ESTATE_LAW_PDF = ["RCW_59.18.pdf", "law/landlord_tenant_rights.pdf", "law/tenant_rights_big.pdf"]
 
     def __init__(self):
         print("Initializing RAG...")
         self._create_vector_datastore(self.REAL_ESTATE_LAW_PDF, False)
         print("RAG initialized successfully.")
 
-    def _create_vector_datastore(self, pdf_path, create_user_data):
+    def _create_vector_datastore(self, pdf_paths, create_user_data):
 
         # Check if the Law vector database already exists, 
         persist_directory = "./real_estate_db"
@@ -29,16 +29,20 @@ class RAG:
             print(f"Vector DB at {persist_directory} already exists.")
             return Chroma(persist_directory=persist_directory, embedding_function=HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL))
         
-        # Load PDF
-        loader = PyPDFLoader(pdf_path)
-        documents = loader.load()
+        # Load and combine documents from all PDFs
+        all_documents = []
+        for pdf_path in pdf_paths:
+            print(f"Loading PDF: {pdf_path}")
+            loader = PyPDFLoader(pdf_path)
+            documents = loader.load()
+            all_documents.extend(documents)
         
         # Split Text
         text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=CHUNK_SIZE,
             chunk_overlap=CHUNK_OVERLAP
         )
-        chunks = text_splitter.split_documents(documents)
+        chunks = text_splitter.split_documents(all_documents)
         
         # Create Vector Store
         embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
@@ -53,7 +57,7 @@ class RAG:
     def create_user_data_vector_store(self, user_data):
         try:
             print(f"Creating user data vector store from {user_data}...")
-            self._create_vector_datastore(user_data, True)
+            self._create_vector_datastore([user_data], True)
             print("User data vector store created successfully.")
         except Exception as e:
             print(f"Error creating user data vector store: {e}")
@@ -91,7 +95,7 @@ class RAG:
 if __name__ == "__main__":
     # Example usage
     rag = RAG()
-    # rag.create_user_data_vector_store("rental_agreement.pdf")
+    rag.create_user_data_vector_store("rental_agreement.pdf")
     # Example query
     query = input("Enter your query: ")
     law_context, user_data_context = rag.rag(query)
